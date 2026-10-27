@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteStar Africa - Official Online Voting Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            300: '#FDE047',
+                            400: '#FACC15',
+                            500: '#EAB308',
+                            600: '#CA8A04',
+                        },
+                        vstar: {
+                            dark: '#0A0C14',
+                            card: '#121726',
+                            border: '#222B42',
+                            accent: '#8B5CF6',
+                            pink: '#EC4899'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0A0C14;
+            color: #F3F4F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF5C0 0%, #FACC15 50%, #EAB308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .purple-gold-glow {
+            box-shadow: 0 0 35px -5px rgba(139, 92, 246, 0.25);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0A0C14;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #222B42;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between custom-scrollbar selection:bg-gold-500 selection:text-black">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- MAIN NAVBAR -->
+    <header class="sticky top-0 z-40 bg-vstar-dark/95 backdrop-blur-md border-b border-vstar-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-4">
+                
+                <!-- Brand Logo & Name -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchMainView('vote')">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 via-gold-400 to-pink-500 flex items-center justify-center text-black font-extrabold text-2xl shadow-lg shadow-purple-500/20">
+                        <i class="fa-solid fa-star text-slate-950"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase tracking-widest text-gold-400 font-bold block">African Excellence</span>
+                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">VoteStar <span class="gold-gradient-text">Africa</span></h1>
+                    </div>
+                </div>
+
+                <!-- Search Input -->
+                <div class="hidden md:flex flex-1 max-w-md mx-4">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search contestant by name or code (e.g. P4LNB)..." 
+                            class="w-full bg-vstar-card border border-vstar-border rounded-full py-2.5 pl-11 pr-4 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:border-gold-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Navigation & Admin Status -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button onclick="switchMainView('vote')" id="nav-btn-vote" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-gold-500 text-black shadow-md shadow-gold-500/10">
+                        <i class="fa-solid fa-vote-yea mr-1.5"></i> Contests
+                    </button>
+                    <button onclick="switchMainView('leaderboard')" id="nav-btn-leaderboard" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-gray-300 hover:text-white hover:bg-vstar-card transition-all">
+                        <i class="fa-solid fa-trophy mr-1.5 text-gold-400"></i> Leaderboard
+                    </button>
+                    
+                    <!-- Admin Login / Portal Trigger -->
+                    <div id="adminNavContainer" class="pl-2 border-l border-vstar-border">
+                        <!-- Rendered dynamically depending on Admin status -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Search Bar -->
+            <div class="pb-4 md:hidden">
+                <div class="relative w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="mobileSearchInput" onkeyup="handleSearch(true)" placeholder="Search contestant name or code (P4LNB)..." 
+                        class="w-full bg-vstar-card border border-vstar-border rounded-full py-2 pl-11 pr-4 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:border-gold-500">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+        <!-- ACTIVE EVENT BANNER -->
+        <section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-vstar-card via-slate-900 to-vstar-card border border-vstar-border p-6 sm:p-8 mb-8 purple-gold-glow">
+            <div class="absolute -top-24 -right-24 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center relative z-10">
+                <div class="lg:col-span-2 space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="eventStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Voting Open
+                        </span>
+                        <span id="currentEventCategoryBadge" class="px-3 py-1 rounded-full bg-vstar-accent/20 border border-vstar-accent/40 text-purple-300 text-xs font-semibold">
+                            Category: All Events
+                        </span>
+                    </div>
+                    <h2 id="eventTitleBanner" class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                        Pulse Star Choice Awards 2026
+                    </h2>
+                    <p id="eventRulesBanner" class="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl">
+                        Cast your daily free vote or boost your favorite creators using African Mobile Money options (M-Pesa, MTN MoMo, Airtel).
+                    </p>
+                </div>
+
+                <!-- Live Countdown & Overall Stats -->
+                <div class="bg-vstar-dark/90 rounded-2xl p-4 border border-vstar-border flex flex-col gap-4">
+                    <div class="flex justify-between items-center text-xs text-gray-400 font-medium">
+                        <span><i class="fa-regular fa-clock text-gold-400 mr-1"></i> Voting Closes In:</span>
+                        <span class="text-gold-400 font-bold" id="totalVotesBadge">0 Total Votes</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center" id="countdown">
+                        <div class="bg-vstar-card rounded-xl p-2 border border-vstar-border/50">
+                            <span class="block text-xl font-bold text-white" id="cd-days">03</span>
+                            <span class="text-[10px] uppercase text-gray-400">Days</span>
+                        </div>
+                        <div class="bg-vstar-card rounded-xl p-2 border border-vstar-border/50">
+                            <span class="block text-xl font-bold text-white" id="cd-hours">18</span>
+                            <span class="text-[10px] uppercase text-gray-400">Hours</span>
+                        </div>
+                        <div class="bg-vstar-card rounded-xl p-2 border border-vstar-border/50">
+                            <span class="block text-xl font-bold text-white" id="cd-mins">22</span>
+                            <span class="text-[10px] uppercase text-gray-400">Mins</span>
+                        </div>
+                        <div class="bg-vstar-card rounded-xl p-2 border border-vstar-border/50">
+                            <span class="block text-xl font-bold text-white" id="cd-secs">45</span>
+                            <span class="text-[10px] uppercase text-gray-400">Secs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN BAR (VISIBLE WHEN LOGGED IN AS ADMIN) -->
+        <div id="adminControlBar" class="hidden mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-vstar-card to-purple-950/80 border border-purple-500/40 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                        Admin Command Active
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">Super Admin</span>
+                    </h4>
+                    <p class="text-xs text-gray-400">You have sole authorization to edit contestants, manage events, and pause voting.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleGlobalVoting()" id="adminPauseBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all">
+                    <i class="fa-solid fa-pause mr-1"></i> Pause Voting
+                </button>
+                <button onclick="openModal('newEventModal')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md shadow-purple-600/20">
+                    <i class="fa-solid fa-calendar-plus mr-1"></i> Create Event
+                </button>
+                <button onclick="openAddNomineeModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-gold-500 hover:bg-gold-400 text-black transition-all shadow-md shadow-gold-500/20">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Add Contestant
+                </button>
+                <button onclick="adminLogout()" class="px-3 py-2 rounded-xl text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30 transition-all">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 1: CONTESTANTS & VOTING GRID -->
+        <div id="view-vote" class="space-y-6">
+            
+            <!-- Category Filter Tabs -->
+            <div class="flex items-center justify-between gap-4 border-b border-vstar-border pb-4 overflow-x-auto custom-scrollbar">
+                <div class="flex gap-2" id="categoryTabs">
+                    <!-- Dynamic categories -->
+                </div>
+            </div>
+
+            <!-- Nominees Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="nomineesGrid">
+                <!-- Dynamic cards -->
+            </div>
+        </div>
+
+        <!-- VIEW 2: LEADERBOARD VIEW -->
+        <div id="view-leaderboard" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-vstar-card p-6 rounded-2xl border border-vstar-border">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Live Leaderboard Standings</h3>
+                    <p class="text-sm text-gray-400">Real-time vote tallies updated continuously.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="lbCategoryFilter" class="text-xs text-gray-400 font-medium">Category Filter:</label>
+                    <select id="lbCategoryFilter" onchange="renderLeaderboard()" class="bg-vstar-dark border border-vstar-border text-sm rounded-lg px-3 py-2 text-white focus:outline-none focus:border-gold-500">
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-vstar-card rounded-2xl border border-vstar-border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-vstar-dark/80 text-xs uppercase tracking-wider text-gray-400 border-b border-vstar-border">
+                                <th class="py-4 px-6">Rank</th>
+                                <th class="py-4 px-6">Contestant</th>
+                                <th class="py-4 px-6">Code</th>
+                                <th class="py-4 px-6">Category</th>
+                                <th class="py-4 px-6 text-right">Total Votes</th>
+                                <th class="py-4 px-6 text-right">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody" class="divide-y divide-vstar-border text-sm">
+                            <!-- Dynamic Leaderboard -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-vstar-dark border-t border-vstar-border py-8 mt-12 text-xs text-gray-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded bg-gradient-to-tr from-purple-600 to-gold-400 flex items-center justify-center text-black font-bold text-xs">V</div>
+                <span class="text-gray-300 font-semibold">VoteStar Africa Platform &copy; 2026</span>
+            </div>
+            <div class="flex flex-wrap gap-6">
+                <a href="#" class="hover:text-gold-400 transition-colors">Audit & Transparency</a>
+                <a href="#" class="hover:text-gold-400 transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-gold-400 transition-colors">Terms of Service</a>
+                <a href="#" onclick="openAdminLoginModal()" class="text-purple-400 hover:text-purple-300 font-semibold transition-colors"><i class="fa-solid fa-lock text-[10px] mr-1"></i> Admin Login</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: ADMIN LOGIN MODAL -->
+    <div id="adminLoginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-purple-500/40 rounded-2xl max-w-sm w-full p-6 relative shadow-2xl">
+            <button onclick="closeModal('adminLoginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center space-y-2 mb-6">
+                <div class="w-14 h-14 bg-purple-600/20 border border-purple-500/40 text-purple-400 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Admin Authentication</h3>
+                <p class="text-xs text-gray-400">Only authorized organizers can manage event details and add contestants.</p>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Enter Secret Admin PIN / Key:</label>
+                    <input type="password" id="adminPinInput" required placeholder="Default PIN: admin123" 
+                        class="w-full bg-vstar-dark border border-vstar-border rounded-xl p-3 text-sm text-center text-white font-mono tracking-widest focus:outline-none focus:border-purple-500">
+                    <span class="text-[10px] text-purple-400 mt-1 block">Default PIN: <code class="font-bold bg-vstar-dark px-1.5 py-0.5 rounded border border-vstar-border">admin123</code></span>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-purple-600/20">
+                    Authenticate Session
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD / EDIT CONTESTANT MODAL -->
+    <div id="nomineeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-vstar-border rounded-2xl max-w-md w-full p-6 relative shadow-2xl custom-scrollbar max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('nomineeModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center text-lg border border-gold-500/30">
+                    <i class="fa-solid fa-user-pen"></i>
+                </div>
+                <div>
+                    <h3 id="nomineeModalTitle" class="text-lg font-bold text-white">Add New Contestant</h3>
+                    <p class="text-xs text-gray-400">Admin Contestant Control Panel</p>
+                </div>
+            </div>
+
+            <form id="nomineeForm" onsubmit="handleSaveNominee(event)" class="space-y-4">
+                <input type="hidden" id="editNomineeId" value="">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Full Name:</label>
+                    <input type="text" id="formNomineeName" required placeholder="e.g. Samuel Eto'o" class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Category:</label>
+                    <select id="formNomineeCategory" required class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                        <option value="Best Content Creator">Best Content Creator</option>
+                        <option value="Rising Star">Rising Star</option>
+                        <option value="Artist of the Year">Artist of the Year</option>
+                        <option value="Tech Innovator">Tech Innovator</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Unique Voting Code (e.g. P4LNB):</label>
+                    <input type="text" id="formNomineeCode" required placeholder="e.g. P4LNB" class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white uppercase focus:outline-none focus:border-gold-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Initial Vote Count (Optional):</label>
+                    <input type="number" id="formNomineeVotes" min="0" placeholder="0" class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Photo Image URL:</label>
+                    <input type="url" id="formNomineeImage" placeholder="https://..." class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                    <span class="text-[10px] text-gray-400 mt-1 block">Leave empty to auto-generate image avatar.</span>
+                </div>
+
+                <button type="submit" id="nomineeFormSubmitBtn" class="w-full bg-gold-500 hover:bg-gold-400 text-black font-bold py-3 rounded-xl transition-all shadow-lg shadow-gold-500/20">
+                    Save Contestant Details
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CREATE / EDIT EVENT MODAL -->
+    <div id="newEventModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-vstar-border rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+            <button onclick="closeModal('newEventModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center text-lg border border-purple-500/30">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Manage Voting Event</h3>
+                    <p class="text-xs text-gray-400">Configure Event Details & Guidelines</p>
+                </div>
+            </div>
+
+            <form onsubmit="handleSaveEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Event Title:</label>
+                    <input type="text" id="eventTitleInput" required placeholder="Pulse Star Choice Awards 2026" class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Guidelines & Description:</label>
+                    <textarea id="eventRulesInput" rows="3" required placeholder="Cast your votes..." class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-purple-500"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-purple-600/20">
+                    Update Event Configuration
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: FREE VOTE MODAL -->
+    <div id="freeVoteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-vstar-border rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+            <button onclick="closeModal('freeVoteModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center space-y-3">
+                <div class="w-14 h-14 bg-gold-500/10 border border-gold-500/30 text-gold-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-check-to-slot"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Cast Free Daily Vote</h3>
+                <p class="text-xs text-gray-400">Voting for: <span id="fv-nominee-name" class="text-gold-400 font-bold">Candidate Name</span> (<span id="fv-nominee-code" class="text-gray-300">CODE</span>)</p>
+            </div>
+
+            <div class="mt-6 space-y-4">
+                <div class="bg-vstar-dark p-4 rounded-xl border border-vstar-border space-y-2">
+                    <label class="block text-xs font-semibold text-gray-300">Human Security Challenge:</label>
+                    <div class="flex items-center justify-between bg-vstar-card p-3 rounded-lg border border-vstar-border">
+                        <span id="captchaQuestion" class="font-mono text-gold-400 font-bold tracking-widest text-base">5 + 3 = ?</span>
+                        <button onclick="generateCaptcha()" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <input type="number" id="captchaAnswer" placeholder="Enter answer..." class="w-full bg-vstar-card border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+
+                <button onclick="submitFreeVote()" class="w-full bg-gold-500 hover:bg-gold-400 text-black font-bold py-3 rounded-xl transition-all shadow-lg shadow-gold-500/20">
+                    Confirm & Submit Free Vote
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: BUY BOOST VOTES (PAID VOTES) -->
+    <div id="paidVoteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-vstar-border rounded-2xl max-w-lg w-full p-6 relative shadow-2xl custom-scrollbar max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('paidVoteModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-rocket"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Boost Contestant Votes</h3>
+                    <p class="text-xs text-gray-400">Contestant: <span id="pv-nominee-name" class="text-gold-400 font-bold"></span> (<span id="pv-nominee-code"></span>)</p>
+                </div>
+            </div>
+
+            <!-- Package Selection -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-300 font-semibold mb-2">Select Vote Package:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="packageOptions">
+                        <button onclick="selectPackage(5, 0.50)" class="pkg-btn p-3 rounded-xl border border-vstar-border bg-vstar-dark text-center hover:border-gold-500 transition-all" data-votes="5">
+                            <span class="block text-lg font-bold text-white">+5</span>
+                            <span class="text-[10px] text-gray-400">$0.50</span>
+                        </button>
+                        <button onclick="selectPackage(20, 1.80)" class="pkg-btn p-3 rounded-xl border border-vstar-border bg-vstar-dark text-center hover:border-gold-500 transition-all" data-votes="20">
+                            <span class="block text-lg font-bold text-white">+20</span>
+                            <span class="text-[10px] text-gold-400 font-semibold">$1.80 (10% off)</span>
+                        </button>
+                        <button onclick="selectPackage(50, 4.00)" class="pkg-btn p-3 rounded-xl border border-vstar-border bg-vstar-dark text-center hover:border-gold-500 transition-all" data-votes="50">
+                            <span class="block text-lg font-bold text-white">+50</span>
+                            <span class="text-[10px] text-gold-400 font-semibold">$4.00 (20% off)</span>
+                        </button>
+                        <button onclick="selectPackage(100, 7.50)" class="pkg-btn p-3 rounded-xl border border-vstar-border bg-vstar-dark text-center hover:border-gold-500 transition-all" data-votes="100">
+                            <span class="block text-lg font-bold text-white">+100</span>
+                            <span class="text-[10px] text-gold-400 font-semibold">$7.50 (25% off)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Amount Input -->
+                <div class="flex items-center gap-3">
+                    <div class="flex-1">
+                        <label class="block text-[11px] text-gray-400 mb-1">Custom Vote Count:</label>
+                        <input type="number" id="customVoteCount" min="1" max="5000" placeholder="e.g. 15" oninput="handleCustomVoteInput()" class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[11px] text-gray-400 mb-1">Total Cost (USD / Equivalent):</label>
+                        <div class="bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm font-bold text-gold-400" id="totalCostDisplay">
+                            $0.50
+                        </div>
+                    </div>
+                </div>
+
+                <!-- African Mobile Money Payment Options -->
+                <div>
+                    <label class="block text-xs text-gray-300 font-semibold mb-2">Select African Payment Channel:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer border border-vstar-border p-3 rounded-xl bg-vstar-dark flex items-center gap-3 hover:border-gold-500 transition-all">
+                            <input type="radio" name="payMethod" value="M-Pesa" checked class="accent-gold-500">
+                            <div>
+                                <span class="block text-xs font-bold text-white">M-Pesa</span>
+                                <span class="text-[10px] text-gray-400">Kenya, TZ, Global</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer border border-vstar-border p-3 rounded-xl bg-vstar-dark flex items-center gap-3 hover:border-gold-500 transition-all">
+                            <input type="radio" name="payMethod" value="MTN MoMo" class="accent-gold-500">
+                            <div>
+                                <span class="block text-xs font-bold text-white">MTN MoMo</span>
+                                <span class="text-[10px] text-gray-400">Uganda, GH, SA</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer border border-vstar-border p-3 rounded-xl bg-vstar-dark flex items-center gap-3 hover:border-gold-500 transition-all">
+                            <input type="radio" name="payMethod" value="Airtel Money" class="accent-gold-500">
+                            <div>
+                                <span class="block text-xs font-bold text-white">Airtel Money</span>
+                                <span class="text-[10px] text-gray-400">Pan-Africa</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer border border-vstar-border p-3 rounded-xl bg-vstar-dark flex items-center gap-3 hover:border-gold-500 transition-all">
+                            <input type="radio" name="payMethod" value="Visa/Mastercard" class="accent-gold-500">
+                            <div>
+                                <span class="block text-xs font-bold text-white">Debit / Card</span>
+                                <span class="text-[10px] text-gray-400">Global Card</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Phone / Account Input -->
+                <div>
+                    <label class="block text-xs text-gray-300 font-semibold mb-1">Phone Number / Payment Account ID:</label>
+                    <input type="tel" id="payPhoneNumber" placeholder="+254 700 000 000 or +256..." class="w-full bg-vstar-dark border border-vstar-border rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+
+                <button onclick="processPaidVote()" id="paySubmitBtn" class="w-full bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 hover:to-amber-500 text-black font-extrabold py-3.5 rounded-xl transition-all shadow-lg shadow-gold-500/20 mt-2">
+                    Pay Now & Cast Boost Votes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: DIGITAL RECEIPT MODAL -->
+    <div id="receiptModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4">
+        <div class="bg-vstar-card border border-gold-500/40 rounded-2xl max-w-md w-full p-6 relative shadow-2xl space-y-4">
+            <div class="text-center space-y-1 border-b border-vstar-border pb-4">
+                <div class="w-12 h-12 bg-green-500/10 text-green-400 rounded-full flex items-center justify-center mx-auto text-xl mb-2 border border-green-500/30">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Transaction Verified!</h3>
+                <p class="text-xs text-gray-400">VoteStar Official Transaction Receipt</p>
+            </div>
+
+            <div class="bg-vstar-dark p-4 rounded-xl border border-vstar-border font-mono text-xs space-y-2">
+                <div class="flex justify-between text-gray-400">
+                    <span>Transaction Ref:</span>
+                    <span id="rcp-ref" class="text-white font-bold"></span>
+                </div>
+                <div class="flex justify-between text-gray-400">
+                    <span>Contestant:</span>
+                    <span id="rcp-nominee" class="text-gold-400 font-bold"></span>
+                </div>
+                <div class="flex justify-between text-gray-400">
+                    <span>Voting Code:</span>
+                    <span id="rcp-code" class="text-white"></span>
+                </div>
+                <div class="flex justify-between text-gray-400">
+                    <span>Votes Added:</span>
+                    <span id="rcp-votes" class="text-green-400 font-bold"></span>
+                </div>
+                <div class="flex justify-between text-gray-400">
+                    <span>Payment Channel:</span>
+                    <span id="rcp-method" class="text-white"></span>
+                </div>
+                <div class="flex justify-between text-gray-400">
+                    <span>Amount Paid:</span>
+                    <span id="rcp-amount" class="text-white font-bold"></span>
+                </div>
+                <div class="flex justify-between text-gray-400 border-t border-vstar-border pt-2">
+                    <span>Timestamp:</span>
+                    <span id="rcp-date" class="text-gray-300"></span>
+                </div>
+            </div>
+
+            <button onclick="closeModal('receiptModal')" class="w-full bg-gold-500 text-black font-bold py-3 rounded-xl hover:bg-gold-400 transition-all">
+                Done & Return to Event
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // Secret Admin Passcode / PIN
+        const SECRET_ADMIN_PIN = "admin123";
+        let isAdminLoggedIn = false;
+        let isVotingActive = true;
+
+        // Current Event State
+        let currentEvent = {
+            title: "Pulse Star Choice Awards 2026",
+            rules: "Cast your daily free vote or boost your favorite creators using African Mobile Money options (M-Pesa, MTN MoMo, Airtel)."
+        };
+
+        // Nominees Dataset
+        let nominees = [
+            { id: 1, name: "Amina Mohamed", category: "Best Content Creator", code: "P4LNB", votes: 4850, image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
+            { id: 2, name: "Kofi Mensah", category: "Best Content Creator", code: "P7KMF", votes: 3920, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
+            { id: 3, name: "Zuri Adeleke", category: "Rising Star", code: "RS01Z", votes: 6100, image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80" },
+            { id: 4, name: "David Ochieng", category: "Rising Star", code: "RS09D", votes: 2400, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" },
+            { id: 5, name: "Burna Star", category: "Artist of the Year", code: "AY99B", votes: 9800, image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=600&q=80" },
+            { id: 6, name: "Tems Joy", category: "Artist of the Year", code: "AY44T", votes: 8900, image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" },
+            { id: 7, name: "Dr. Samuel Okon", category: "Tech Innovator", code: "TI10S", votes: 3100, image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80" }
+        ];
+
+        let categories = ["All", "Best Content Creator", "Rising Star", "Artist of the Year", "Tech Innovator"];
+        let activeCategory = "All";
+        let currentSelectedNominee = null;
+        let selectedVotes = 5;
+        let selectedPrice = 0.50;
+        let captchaSolution = 0;
+
+        // Initialization
+        window.onload = function() {
+            renderAdminNav();
+            renderCategoryTabs();
+            renderNominees();
+            updateTotalVotes();
+            initCountdown();
+            populateLeaderboardFilter();
+            checkUrlCode();
+        };
+
+        // URL Code Check (e.g. ?code=P4LNB)
+        function checkUrlCode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codeParam = urlParams.get('code');
+            if (codeParam) {
+                const searchInput = document.getElementById('searchInput');
+                const mobileSearchInput = document.getElementById('mobileSearchInput');
+                if (searchInput) searchInput.value = codeParam;
+                if (mobileSearchInput) mobileSearchInput.value = codeParam;
+                handleSearch();
+            }
+        }
+
+        // ADMIN AUTHENTICATION
+        function openAdminLoginModal() {
+            if (isAdminLoggedIn) {
+                showToast("You are already authenticated as Admin.", "info");
+                return;
+            }
+            openModal('adminLoginModal');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('adminPinInput').value;
+            if (pin === SECRET_ADMIN_PIN) {
+                isAdminLoggedIn = true;
+                closeModal('adminLoginModal');
+                renderAdminNav();
+                renderNominees(); // Re-render to show edit/delete controls
+                showToast("Admin access granted! You now have sole privileges.", "success");
+            } else {
+                showToast("Invalid Admin PIN. Please check passcode.", "error");
+            }
+        }
+
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            renderAdminNav();
+            renderNominees();
+            showToast("Admin session ended.", "info");
+        }
+
+        function renderAdminNav() {
+            const navContainer = document.getElementById('adminNavContainer');
+            const adminBar = document.getElementById('adminControlBar');
+
+            if (isAdminLoggedIn) {
+                adminBar.classList.remove('hidden');
+                navContainer.innerHTML = `
+                    <button onclick="adminLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600/20 text-purple-300 border border-purple-500/40 hover:bg-purple-600/30 transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-shield text-gold-400"></i> Admin Active
+                    </button>
+                `;
+            } else {
+                adminBar.classList.add('hidden');
+                navContainer.innerHTML = `
+                    <button onclick="openAdminLoginModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-vstar-card border border-vstar-border transition-all">
+                        <i class="fa-solid fa-lock text-[10px] mr-1"></i> Admin Login
+                    </button>
+                `;
+            }
+        }
+
+        function toggleGlobalVoting() {
+            isVotingActive = !isVotingActive;
+            const badge = document.getElementById('eventStatusBadge');
+            const btn = document.getElementById('adminPauseBtn');
+
+            if (isVotingActive) {
+                badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Voting Open`;
+                btn.innerHTML = `<i class="fa-solid fa-pause mr-1"></i> Pause Voting`;
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all";
+                showToast("Voting is now resumed for all contestants.", "success");
+            } else {
+                badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400"></span> Voting Paused`;
+                btn.innerHTML = `<i class="fa-solid fa-play mr-1"></i> Resume Voting`;
+                btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition-all";
+                showToast("Voting has been paused globally.", "info");
+            }
+        }
+
+        // CATEGORIES & SEARCH LOGIC
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryTabs');
+            container.innerHTML = categories.map(cat => `
+                <button onclick="filterCategory('${cat}')" 
+                    class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                        activeCategory === cat 
+                        ? 'bg-gold-500 text-black shadow-md shadow-gold-500/20' 
+                        : 'bg-vstar-card text-gray-300 hover:text-white hover:bg-vstar-border'
+                    }">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            renderCategoryTabs();
+            renderNominees();
+        }
+
+        function getCategoryTotalVotes(cat) {
+            const list = cat === "All" ? nominees : nominees.filter(n => n.category === cat);
+            return list.reduce((sum, n) => sum + n.votes, 0);
+        }
+
+        // RENDER NOMINEE CARDS
+        function renderNominees(query = "") {
+            const grid = document.getElementById('nomineesGrid');
+            let filtered = nominees;
+
+            if (activeCategory !== "All") {
+                filtered = filtered.filter(n => n.category === activeCategory);
+            }
+
+            if (query.trim() !== "") {
+                const q = query.toLowerCase();
+                filtered = filtered.filter(n => 
+                    n.name.toLowerCase().includes(q) || 
+                    n.code.toLowerCase().includes(q) ||
+                    n.category.toLowerCase().includes(q)
+                );
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <i class="fa-solid fa-user-slash text-4xl mb-3 text-gray-600 block"></i>
+                        <p class="text-base font-semibold">No contestants match your criteria.</p>
+                        <span class="text-xs text-gray-500">Try searching another candidate name or code.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(nom => {
+                const catTotal = getCategoryTotalVotes(nom.category);
+                const percentage = catTotal > 0 ? ((nom.votes / catTotal) * 100).toFixed(1) : 0;
+
+                return `
+                <div class="bg-vstar-card border border-vstar-border hover:border-purple-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative">
+                    
+                    ${isAdminLoggedIn ? `
+                        <div class="absolute top-3 right-3 flex gap-1 z-10">
+                            <button onclick="openEditNomineeModal(${nom.id})" class="w-7 h-7 rounded-lg bg-vstar-dark text-purple-400 hover:text-white border border-vstar-border hover:border-purple-500 flex items-center justify-center text-xs" title="Edit Contestant">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteNominee(${nom.id})" class="w-7 h-7 rounded-lg bg-vstar-dark text-red-400 hover:text-white border border-vstar-border hover:border-red-500 flex items-center justify-center text-xs" title="Delete Contestant">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    <div>
+                        <!-- Header Badges -->
+                        <div class="flex justify-between items-start mb-4 pr-12">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                ${nom.category}
+                            </span>
+                            <span class="text-xs font-mono font-bold text-gold-400 bg-vstar-dark px-2 py-1 rounded border border-vstar-border">
+                                #${nom.code}
+                            </span>
+                        </div>
+
+                        <!-- Candidate Profile -->
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="relative">
+                                <img src="${nom.image}" alt="${nom.name}" 
+                                    onerror="this.src='https://placehold.co/150x150/121726/FACC15?text=${encodeURIComponent(nom.name)}'" 
+                                    class="w-16 h-16 rounded-full object-cover border-2 border-vstar-border group-hover:border-gold-500 transition-all">
+                                <div class="absolute -bottom-1 -right-1 bg-gold-500 text-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base group-hover:text-gold-400 transition-colors leading-snug">${nom.name}</h3>
+                                <div class="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                                    <i class="fa-solid fa-fire text-gold-500"></i>
+                                    <span class="font-bold text-white">${nom.votes.toLocaleString()}</span> votes
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="space-y-1.5 mb-5">
+                            <div class="flex justify-between text-[11px] text-gray-400 font-medium">
+                                <span>Category Share</span>
+                                <span class="text-gold-400 font-bold">${percentage}%</span>
+                            </div>
+                            <div class="w-full bg-vstar-dark rounded-full h-2 overflow-hidden border border-vstar-border/50">
+                                <div class="bg-gradient-to-r from-purple-600 via-gold-500 to-amber-400 h-2 rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-vstar-border/50">
+                        <button onclick="openFreeVoteModal(${nom.id})" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-gray-200 bg-vstar-dark border border-vstar-border hover:bg-vstar-border transition-all">
+                            <i class="fa-solid fa-hand-pointer text-gold-400 mr-1"></i> Vote Free
+                        </button>
+                        <button onclick="openPaidVoteModal(${nom.id})" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 transition-all shadow-md shadow-gold-500/10">
+                            <i class="fa-solid fa-rocket mr-1"></i> Boost (Paid)
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function handleSearch(isMobile = false) {
+            const inputId = isMobile ? 'mobileSearchInput' : 'searchInput';
+            const query = document.getElementById(inputId).value;
+            renderNominees(query);
+        }
+
+        // VIEW NAVIGATION
+        function switchMainView(view) {
+            const voteView = document.getElementById('view-vote');
+            const lbView = document.getElementById('view-leaderboard');
+            const btnVote = document.getElementById('nav-btn-vote');
+            const btnLb = document.getElementById('nav-btn-leaderboard');
+
+            if (view === 'vote') {
+                voteView.classList.remove('hidden');
+                lbView.classList.add('hidden');
+                btnVote.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-gold-500 text-black shadow-md shadow-gold-500/10";
+                btnLb.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-gray-300 hover:text-white hover:bg-vstar-card transition-all";
+            } else {
+                voteView.classList.add('hidden');
+                lbView.classList.remove('hidden');
+                btnLb.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-gold-500 text-black shadow-md shadow-gold-500/10";
+                btnVote.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-gray-300 hover:text-white hover:bg-vstar-card transition-all";
+                renderLeaderboard();
+            }
+        }
+
+        // FREE VOTE WORKFLOW
+        function generateCaptcha() {
+            const n1 = Math.floor(Math.random() * 9) + 1;
+            const n2 = Math.floor(Math.random() * 9) + 1;
+            captchaSolution = n1 + n2;
+            document.getElementById('captchaQuestion').innerText = `${n1} + ${n2} = ?`;
+            document.getElementById('captchaAnswer').value = '';
+        }
+
+        function openFreeVoteModal(id) {
+            if (!isVotingActive) {
+                showToast("Voting is currently paused by the organizer.", "error");
+                return;
+            }
+            currentSelectedNominee = nominees.find(n => n.id === id);
+            document.getElementById('fv-nominee-name').innerText = currentSelectedNominee.name;
+            document.getElementById('fv-nominee-code').innerText = currentSelectedNominee.code;
+            generateCaptcha();
+            openModal('freeVoteModal');
+        }
+
+        function submitFreeVote() {
+            const userAnswer = parseInt(document.getElementById('captchaAnswer').value);
+            if (isNaN(userAnswer) || userAnswer !== captchaSolution) {
+                showToast("Security verification failed. Please try again.", "error");
+                generateCaptcha();
+                return;
+            }
+
+            currentSelectedNominee.votes += 1;
+            updateTotalVotes();
+            renderNominees();
+            closeModal('freeVoteModal');
+            showToast(`Free vote cast successfully for ${currentSelectedNominee.name}!`, "success");
+        }
+
+        // PAID VOTE WORKFLOW
+        function openPaidVoteModal(id) {
+            if (!isVotingActive) {
+                showToast("Voting is currently paused by the organizer.", "error");
+                return;
+            }
+            currentSelectedNominee = nominees.find(n => n.id === id);
+            document.getElementById('pv-nominee-name').innerText = currentSelectedNominee.name;
+            document.getElementById('pv-nominee-code').innerText = currentSelectedNominee.code;
+            document.getElementById('customVoteCount').value = '';
+            selectPackage(5, 0.50);
+            openModal('paidVoteModal');
+        }
+
+        function selectPackage(votes, price) {
+            selectedVotes = votes;
+            selectedPrice = price;
+            document.getElementById('customVoteCount').value = '';
+            
+            document.querySelectorAll('.pkg-btn').forEach(btn => {
+                if (parseInt(btn.getAttribute('data-votes')) === votes) {
+                    btn.classList.add('border-gold-500', 'bg-gold-500/10');
+                } else {
+                    btn.classList.remove('border-gold-500', 'bg-gold-500/10');
+                }
+            });
+
+            document.getElementById('totalCostDisplay').innerText = `$${price.toFixed(2)}`;
+        }
+
+        function handleCustomVoteInput() {
+            const count = parseInt(document.getElementById('customVoteCount').value);
+            if (!isNaN(count) && count > 0) {
+                selectedVotes = count;
+                selectedPrice = count * 0.10;
+                document.getElementById('totalCostDisplay').innerText = `$${selectedPrice.toFixed(2)}`;
+                document.querySelectorAll('.pkg-btn').forEach(btn => btn.classList.remove('border-gold-500', 'bg-gold-500/10'));
+            }
+        }
+
+        function processPaidVote() {
+            const phone = document.getElementById('payPhoneNumber').value;
+            if (!phone || phone.length < 7) {
+                showToast("Please enter a valid phone number or account ID.", "error");
+                return;
+            }
+
+            const method = document.querySelector('input[name="payMethod"]:checked').value;
+            const btn = document.getElementById('paySubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Confirming Mobile Money Prompt...`;
+
+            setTimeout(() => {
+                currentSelectedNominee.votes += selectedVotes;
+                updateTotalVotes();
+                renderNominees();
+                
+                btn.disabled = false;
+                btn.innerHTML = `Pay Now & Cast Boost Votes`;
+                closeModal('paidVoteModal');
+
+                triggerReceipt(method, selectedVotes, selectedPrice, currentSelectedNominee);
+            }, 1400);
+        }
+
+        function triggerReceipt(method, votes, price, nominee) {
+            const ref = "VSTAR-" + Math.floor(100000 + Math.random() * 900000);
+            const dateStr = new Date().toLocaleString();
+
+            document.getElementById('rcp-ref').innerText = ref;
+            document.getElementById('rcp-nominee').innerText = nominee.name;
+            document.getElementById('rcp-code').innerText = nominee.code;
+            document.getElementById('rcp-votes').innerText = `+${votes} Boost Votes`;
+            document.getElementById('rcp-method').innerText = method;
+            document.getElementById('rcp-amount').innerText = `$${price.toFixed(2)}`;
+            document.getElementById('rcp-date').innerText = dateStr;
+
+            openModal('receiptModal');
+            showToast(`Payment successful! +${votes} votes boosted.`, "success");
+        }
+
+        // LEADERBOARD RENDER
+        function populateLeaderboardFilter() {
+            const select = document.getElementById('lbCategoryFilter');
+            select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function renderLeaderboard() {
+            const selectedCat = document.getElementById('lbCategoryFilter').value;
+            let list = [...nominees];
+
+            if (selectedCat !== "All") {
+                list = list.filter(n => n.category === selectedCat);
+            }
+
+            list.sort((a, b) => b.votes - a.votes);
+            const totalCatVotes = list.reduce((sum, n) => sum + n.votes, 0);
+            const body = document.getElementById('leaderboardBody');
+
+            if (list.length === 0) {
+                body.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-400">No contestants found.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = list.map((nom, idx) => {
+                const rank = idx + 1;
+                let badge = `<span class="font-bold text-gray-400">#${rank}</span>`;
+
+                if (rank === 1) {
+                    badge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 inline-flex items-center gap-1"><i class="fa-solid fa-crown text-gold-400"></i> 1st Gold</span>`;
+                } else if (rank === 2) {
+                    badge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-400/20 text-slate-300 border border-slate-400/40 inline-flex items-center gap-1"><i class="fa-solid fa-medal"></i> 2nd Silver</span>`;
+                } else if (rank === 3) {
+                    badge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-700/20 text-amber-600 border border-amber-700/40 inline-flex items-center gap-1"><i class="fa-solid fa-award"></i> 3rd Bronze</span>`;
+                }
+
+                const share = totalCatVotes > 0 ? ((nom.votes / totalCatVotes) * 100).toFixed(1) : 0;
+
+                return `
+                    <tr class="hover:bg-vstar-dark/60 transition-colors">
+                        <td class="py-4 px-6">${badge}</td>
+                        <td class="py-4 px-6 flex items-center gap-3">
+                            <img src="${nom.image}" alt="${nom.name}" 
+                                onerror="this.src='https://placehold.co/100x100/121726/FACC15?text=${encodeURIComponent(nom.name)}'" 
+                                class="w-10 h-10 rounded-full object-cover border border-vstar-border">
+                            <span class="font-bold text-white">${nom.name}</span>
+                        </td>
+                        <td class="py-4 px-6 font-mono text-gold-400">${nom.code}</td>
+                        <td class="py-4 px-6 text-xs text-gray-400">${nom.category}</td>
+                        <td class="py-4 px-6 text-right font-bold text-white">${nom.votes.toLocaleString()}</td>
+                        <td class="py-4 px-6 text-right">
+                            <span class="text-xs font-semibold text-gold-400">${share}%</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ADMIN CONTESTANT & EVENT MANAGERS
+        function openAddNomineeModal() {
+            if (!isAdminLoggedIn) return;
+            document.getElementById('nomineeModalTitle').innerText = "Add New Contestant";
+            document.getElementById('editNomineeId').value = "";
+            document.getElementById('nomineeForm').reset();
+            openModal('nomineeModal');
+        }
+
+        function openEditNomineeModal(id) {
+            if (!isAdminLoggedIn) return;
+            const target = nominees.find(n => n.id === id);
+            if (!target) return;
+
+            document.getElementById('nomineeModalTitle').innerText = "Edit Contestant Details";
+            document.getElementById('editNomineeId').value = target.id;
+            document.getElementById('formNomineeName').value = target.name;
+            document.getElementById('formNomineeCategory').value = target.category;
+            document.getElementById('formNomineeCode').value = target.code;
+            document.getElementById('formNomineeVotes').value = target.votes;
+            document.getElementById('formNomineeImage').value = target.image;
+
+            openModal('nomineeModal');
+        }
+
+        function handleSaveNominee(e) {
+            e.preventDefault();
+            if (!isAdminLoggedIn) return;
+
+            const editId = document.getElementById('editNomineeId').value;
+            const name = document.getElementById('formNomineeName').value.trim();
+            const category = document.getElementById('formNomineeCategory').value;
+            const code = document.getElementById('formNomineeCode').value.trim().toUpperCase();
+            const initialVotes = parseInt(document.getElementById('formNomineeVotes').value) || 0;
+            let image = document.getElementById('formNomineeImage').value.trim();
+
+            if (!image) {
+                image = `https://placehold.co/400x400/121726/FACC15?text=${encodeURIComponent(name)}`;
+            }
+
+            if (editId) {
+                // EDIT EXISTING
+                const nominee = nominees.find(n => n.id === parseInt(editId));
+                if (nominee) {
+                    nominee.name = name;
+                    nominee.category = category;
+                    nominee.code = code;
+                    nominee.votes = initialVotes;
+                    nominee.image = image;
+                    showToast(`Updated contestant ${name}`, "success");
+                }
+            } else {
+                // ADD NEW
+                if (nominees.some(n => n.code === code)) {
+                    showToast("Code already in use. Please enter a unique code.", "error");
+                    return;
+                }
+                const newNom = {
+                    id: nominees.length ? Math.max(...nominees.map(n => n.id)) + 1 : 1,
+                    name: name,
+                    category: category,
+                    code: code,
+                    votes: initialVotes,
+                    image: image
+                };
+                nominees.push(newNom);
+                showToast(`Contestant ${name} added successfully!`, "success");
+            }
+
+            renderNominees();
+            updateTotalVotes();
+            closeModal('nomineeModal');
+        }
+
+        function deleteNominee(id) {
+            if (!isAdminLoggedIn) return;
+            const target = nominees.find(n => n.id === id);
+            if (target && confirm(`Are you sure you want to remove ${target.name} from the event?`)) {
+                nominees = nominees.filter(n => n.id !== id);
+                renderNominees();
+                updateTotalVotes();
+                showToast(`Contestant removed.`, "info");
+            }
+        }
+
+        function handleSaveEvent(e) {
+            e.preventDefault();
+            if (!isAdminLoggedIn) return;
+
+            const title = document.getElementById('eventTitleInput').value.trim();
+            const rules = document.getElementById('eventRulesInput').value.trim();
+
+            currentEvent.title = title;
+            currentEvent.rules = rules;
+
+            document.getElementById('eventTitleBanner').innerText = title;
+            document.getElementById('eventRulesBanner').innerText = rules;
+
+            closeModal('newEventModal');
+            showToast("Event configuration updated!", "success");
+        }
+
+        // TOTAL VOTES & TIMER HELPERS
+        function updateTotalVotes() {
+            const total = nominees.reduce((sum, n) => sum + n.votes, 0);
+            document.getElementById('totalVotesBadge').innerText = `${total.toLocaleString()} Total Votes Cast`;
+        }
+
+        function initCountdown() {
+            let days = 3, hours = 18, mins = 22, secs = 45;
+            setInterval(() => {
+                if (secs > 0) secs--;
+                else {
+                    secs = 59;
+                    if (mins > 0) mins--;
+                    else {
+                        mins = 59;
+                        if (hours > 0) hours--;
+                        else {
+                            hours = 23;
+                            if (days > 0) days--;
+                        }
+                    }
+                }
+                document.getElementById('cd-days').innerText = String(days).padStart(2, '0');
+                document.getElementById('cd-hours').innerText = String(hours).padStart(2, '0');
+                document.getElementById('cd-mins').innerText = String(mins).padStart(2, '0');
+                document.getElementById('cd-secs').innerText = String(secs).padStart(2, '0');
+            }, 1000);
+        }
+
+        // UTILITY FUNCTIONS
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === "success" ? "bg-slate-900 border-gold-500/50" : (type === "error" ? "bg-slate-900 border-red-500/50" : "bg-slate-900 border-purple-500/50");
+            const iconClass = type === "success" ? "fa-circle-check text-gold-400" : (type === "error" ? "fa-triangle-exclamation text-red-400" : "fa-info-circle text-purple-400");
+
+            toast.className = `pointer-events-auto flex items-center gap-3 p-4 rounded-xl border ${bgClass} shadow-xl text-xs font-semibold text-white transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-base"></i>
+                <div class="flex-1">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
